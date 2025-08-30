@@ -35,8 +35,8 @@ connection.connect((err) => {
   console.log('✅ Connected to database.');
 });
 
-// Import and use your job routes
-import jobRoutes from '../routes/jobRoutes.js';
+// Assuming jobRoutes.js exports the router as a named export
+import { router as jobRoutes } from '../routes/jobRoutes.js';
 app.use('/api', jobRoutes);
 
 // ✅ New route for the root path to prevent continuous loading
