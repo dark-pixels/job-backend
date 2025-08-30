@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 });
 app.use('/api', jobRoutes);
 
-// ✅ Serverless handlers
+// ✅ Serverless handler
 let serverlessHandler;
 
 const initializeServer = async () => {
@@ -45,7 +45,7 @@ const initializeServer = async () => {
 
   try {
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('DB connection timed out')), 5000)
+      setTimeout(() => reject(new Error('DB connection timed out')), 3000)
     );
 
     await Promise.race([
@@ -65,15 +65,14 @@ const initializeServer = async () => {
 const handler = async (req, res) => {
   console.log(`🔄 Incoming request: ${req.method} ${req.url}`);
 
-  if (!serverlessHandler) {
-    await initializeServer();
-  }
-
   try {
+    if (!serverlessHandler) {
+      await initializeServer();
+    }
     return await serverlessHandler(req, res);
   } catch (err) {
-    console.error('❌ Handler error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ Serverless function crashed:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
 
