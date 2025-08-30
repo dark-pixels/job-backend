@@ -25,20 +25,22 @@ app.get('/', (req, res) => {
     res.json({ message: 'Job-backend server is running!' });
 });
 
-// Use the job routes for API endpoints
+// Use the job routes for API Endpoints
 app.use('/api', jobRoutes);
 
-// Database connection check
-async function checkDbConnection() {
+// Database connection check and server export
+const server = (async () => {
     try {
         await db.execute('SELECT 1');
         console.log('✅ Connected to database.');
     } catch (err) {
         console.error('❌ Database connection failed:', err);
-        // You can choose to exit the process or handle this differently
     }
-}
-checkDbConnection();
+    return serverless(app);
+})();
 
 // ✅ Export as serverless function
-export default serverless(app);
+export default async (req, res) => {
+  const handler = await server;
+  return handler(req, res);
+};
