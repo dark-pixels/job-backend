@@ -39,15 +39,30 @@ let serverlessHandler;
 
 // This async function initializes the handler and checks the database connection
 const initializeServer = async () => {
-    if (!serverlessHandler) {
-        try {
-            await db.execute('SELECT 1');
-            console.log('✅ Connected to database.');
-        } catch (err) {
-            console.error('❌ Database connection failed:', err);
-        }
-        serverlessHandler = serverless(app);
+    if (serverlessHandler) {
+        return serverlessHandler;
     }
+
+    try {
+        // Create a promise that rejects after 5 seconds
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error('Database connection timed out after 5 seconds.'));
+            }, 5000);
+        });
+
+        // Race the database connection promise against the timeout promise
+        await Promise.race([
+            db.execute('SELECT 1'),
+            timeoutPromise
+        ]);
+
+        console.log('✅ Connected to database.');
+    } catch (err) {
+        console.error('❌ Database connection failed:', err);
+    }
+    
+    serverlessHandler = serverless(app);
     return serverlessHandler;
 };
 
