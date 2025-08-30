@@ -18,21 +18,26 @@ import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 
-// CORS setup
+// ✅ CORS setup for deployed frontend
 const corsOptions = {
-  origin: 'https://jobapp-cybermind.vercel.app',
+  origin: ['https://jobapp-cybermind.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true,
   optionsSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // ✅ Handle preflight requests
 app.use(express.json());
 
-// Routes
+// ✅ Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Job-backend server is running!' });
 });
 app.use('/api', jobRoutes);
 
-// Serverless handler
+// ✅ Serverless handler
 let serverlessHandler;
 
 const initializeServer = async () => {
@@ -58,10 +63,18 @@ const initializeServer = async () => {
 };
 
 const handler = async (req, res) => {
+  console.log(`🔄 Incoming request: ${req.method} ${req.url}`);
+
   if (!serverlessHandler) {
     await initializeServer();
   }
-  return serverlessHandler(req, res);
+
+  try {
+    return await serverlessHandler(req, res);
+  } catch (err) {
+    console.error('❌ Handler error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };
 
 export default handler;
