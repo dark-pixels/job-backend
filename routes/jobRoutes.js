@@ -1,8 +1,10 @@
-const express = require('express');
+import express from 'express';
+import { createJob, getJobs } from '../controllers/jobController.js';
+
 const router = express.Router();
-const jobController = require('../controllers/jobController');
 
-router.post('/jobs', jobController.createJob);
-router.get('/jobs', jobController.getJobs);
+// Define API routes
+router.post('/jobs', createJob);
+router.get('/jobs', getJobs);
 
-module.exports = router;
+export default router;

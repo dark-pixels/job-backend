@@ -1,48 +1,41 @@
 import express from 'express';
 import cors from 'cors';
-import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import serverless from 'serverless-http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Resolve __dirname for ES Modules
+// Resolve __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Explicitly configure dotenv to find the .env file in the project root
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Load environment variables from the project root
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+
+// Import the database connection and router
+import db from '../models/db.js';
+import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ MySQL Connection
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  ssl: { rejectUnauthorized: false }, // Optional for cloud DBs
+// Add a simple health check route
+app.get('/', (req, res) => {
+    res.json({ message: 'Job-backend server is running!' });
 });
 
-connection.connect((err) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err);
-    return;
-  }
-  console.log('✅ Connected to database.');
-});
-
-// Assuming jobRoutes.js exports the router as a named export
-import { router as jobRoutes } from '../routes/jobRoutes.js';
+// Use the job routes for API endpoints
 app.use('/api', jobRoutes);
 
-// ✅ New route for the root path to prevent continuous loading
-app.get('/', (req, res) => {
-  res.status(200).send('Hello from the Job-Backend API! The server is running.');
-});
+// Database connection check
+try {
+    await db.execute('SELECT 1');
+    console.log('✅ Connected to database.');
+} catch (err) {
+    console.error('❌ Database connection failed:', err);
+    // You can choose to exit the process or handle this differently
+}
 
-// ✅ Export as a serverless function
+// ✅ Export as serverless function
 export default serverless(app);
