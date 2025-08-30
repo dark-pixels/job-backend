@@ -19,7 +19,7 @@ export const createJob = async (req, res) => {
 };
 
 export const getJobs = async (req, res) => {
-    const { title, location, type, salaryMax } = req.query;
+    const { title, location, type, salaryMin, salaryMax } = req.query;
     let query = 'SELECT * FROM jobs WHERE isDraft = false';
     const params = [];
 
@@ -34,6 +34,10 @@ export const getJobs = async (req, res) => {
     if (type) {
         query += ' AND type = ?';
         params.push(type);
+    }
+    if (salaryMin) {
+        query += ' AND salary >= ?';
+        params.push(salaryMin);
     }
     if (salaryMax) {
         query += ' AND salary <= ?';
