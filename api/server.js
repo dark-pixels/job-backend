@@ -18,22 +18,6 @@ import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 
-// Configure CORS to only allow requests from your frontend URL
-const corsOptions = {
-    origin: 'https://jobapp-cybermind.vercel.app',
-    optionsSuccessStatus: 200 // For legacy browser support
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
-
-// Define all Express routes at the top level
-app.get('/', (req, res) => {
-    res.json({ message: 'Job-backend server is running!' });
-});
-
-app.use('/api', jobRoutes);
-
 // A single variable to hold the initialized serverless handler
 let serverlessHandler;
 
@@ -66,8 +50,44 @@ const initializeServer = async () => {
     return serverlessHandler;
 };
 
-// Export the main handler for Vercel
-export default async (req, res) => {
-    const handler = await initializeServer();
-    return handler(req, res);
+// Check if running on Vercel or locally
+if (process.env.VERCEL_REGION) {
+    // Vercel deployment
+    const corsOptions = {
+        origin: 'https://jobapp-cybermind.vercel.app',
+        optionsSuccessStatus: 200
+    };
+    app.use(cors(corsOptions));
+} else {
+    // Local development
+    const corsOptions = {
+        origin: 'https://jobapp-cybermind.vercel.app',
+        optionsSuccessStatus: 200
+    };
+    app.use(cors(corsOptions));
+}
+
+app.use(express.json());
+
+// Define all Express routes at the top level
+app.get('/', (req, res) => {
+    res.json({ message: 'Job-backend server is running!' });
+});
+
+app.use('/api', jobRoutes);
+
+// Vercel deployment handler
+const handler = async (req, res) => {
+    if (!serverlessHandler) {
+        await initializeServer();
+    }
+    return serverlessHandler(req, res);
 };
+
+// Local development
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+export default handler;
