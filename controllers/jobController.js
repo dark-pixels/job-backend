@@ -25,11 +25,11 @@ export const getJobs = async (req, res) => {
 
     if (title) {
         query += ' AND title LIKE ?';
-        params.push(`%${title}%`);
+        params.push(`${title}%`); // Changed to start with the value
     }
     if (location) {
         query += ' AND location LIKE ?';
-        params.push(`%${location}%`);
+        params.push(`${location}%`); // Changed to start with the value
     }
     if (type) {
         query += ' AND type = ?';
@@ -42,6 +42,9 @@ export const getJobs = async (req, res) => {
 
     try {
         const [rows] = await db.execute(query, params);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "No jobs found matching your criteria." });
+        }
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
