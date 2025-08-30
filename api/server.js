@@ -29,13 +29,16 @@ app.get('/', (req, res) => {
 app.use('/api', jobRoutes);
 
 // Database connection check
-try {
-    await db.execute('SELECT 1');
-    console.log('✅ Connected to database.');
-} catch (err) {
-    console.error('❌ Database connection failed:', err);
-    // You can choose to exit the process or handle this differently
+async function checkDbConnection() {
+    try {
+        await db.execute('SELECT 1');
+        console.log('✅ Connected to database.');
+    } catch (err) {
+        console.error('❌ Database connection failed:', err);
+        // You can choose to exit the process or handle this differently
+    }
 }
+checkDbConnection();
 
 // ✅ Export as serverless function
 export default serverless(app);
