@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 });
 app.use('/api', jobRoutes);
 
-// ✅ Serverless handler
+// ✅ Serverless handlers
 let serverlessHandler;
 
 const initializeServer = async () => {
