@@ -27,6 +27,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Define all Express routes at the top level
+app.get('/', (req, res) => {
+    res.json({ message: 'Job-backend server is running!' });
+});
+
+app.use('/api', jobRoutes);
+
 // A single variable to hold the serverless handler
 let serverlessHandler;
 
@@ -44,14 +51,7 @@ const initializeServer = async () => {
         console.error('❌ Database connection failed:', err);
     }
     
-    // Define all Express routes after the database connection is confirmed
-    app.get('/', (req, res) => {
-        res.json({ message: 'Job-backend server is running!' });
-    });
-    
-    app.use('/api', jobRoutes);
-    
-    // Create the serverless handler
+    // Create the serverless handler after all routes are defined
     serverlessHandler = serverless(app);
     return serverlessHandler;
 };
@@ -59,5 +59,5 @@ const initializeServer = async () => {
 // Export the serverless function
 export default async (req, res) => {
     const handler = await initializeServer();
-    await handler(req, res);
+    return handler(req, res);
 };
