@@ -2,15 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
-import path from 'path'; // Import the path module
 import serverless from 'serverless-http';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Convert import.meta.url to a file path and get the directory name
+// Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Explicitly configure dotenv to look for .env in the parent directory (the project root)
+// Explicitly configure dotenv to find the .env file in the project root
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
@@ -35,49 +35,14 @@ connection.connect((err) => {
   console.log('✅ Connected to database.');
 });
 
-// ✅ GET all jobs
-app.get('/api/jobs', (req, res) => {
-  const sql = 'SELECT * FROM jobs';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching jobs:', err);
-      return res.status(500).json({ error: 'Database query failed' });
-    }
-    res.json(results);
-  });
+// Import and use your job routes
+import jobRoutes from '../routes/jobRoutes.js';
+app.use('/api', jobRoutes);
+
+// ✅ New route for the root path to prevent continuous loading
+app.get('/', (req, res) => {
+  res.status(200).send('Hello from the Job-Backend API! The server is running.');
 });
 
-// ✅ POST new job
-app.post('/api/jobs', (req, res) => {
-  const {
-    title,
-    company,
-    location,
-    type,
-    salary,
-    experience,
-    deadline,
-    description,
-    isDraft,
-  } = req.body;
-
-  const sql = `
-    INSERT INTO jobs (title, company, location, type, salary, experience, deadline, description, isDraft)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  connection.query(
-    sql,
-    [title, company, location, type, salary, experience, deadline, description, isDraft],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting job:', err);
-        return res.status(500).json({ error: 'Database insert failed' });
-      }
-      res.json({ message: 'Job created successfully', id: result.insertId });
-    }
-  );
-});
-
-// ✅ Export as serverless function
+// ✅ Export as a serverless function
 export default serverless(app);
