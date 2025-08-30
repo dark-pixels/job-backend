@@ -5,10 +5,11 @@ import serverless from 'serverless-http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Resolve __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
+// Load environment variables from root .env
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 // Import DB and routes
@@ -17,7 +18,7 @@ import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 
-// ✅ CORS setup
+// ✅ CORS setup for deployed frontend
 const corsOptions = {
   origin: 'https://jobapp-cybermind.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -27,7 +28,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Preflight support
+app.options('*', cors(corsOptions)); // ✅ Handle preflight requests
 app.use(express.json());
 
 // ✅ Routes
@@ -70,6 +71,7 @@ const handler = async (req, res) => {
   } catch (err) {
     console.error('❌ Serverless function crashed:', err);
     res.setHeader('Access-Control-Allow-Origin', corsOptions.origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
