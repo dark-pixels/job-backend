@@ -17,7 +17,14 @@ import db from '../models/db.js';
 import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
-app.use(cors());
+
+// Configure CORS to only allow requests from your frontend URL
+const corsOptions = {
+    origin: 'https://jobapp-cybermind.vercel.app',
+    optionsSuccessStatus: 200 // For legacy browser support
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // A single variable to hold the serverless handler
@@ -52,5 +59,5 @@ const initializeServer = async () => {
 // Export the serverless function
 export default async (req, res) => {
     const handler = await initializeServer();
-    return handler(req, res);
+    await handler(req, res);
 };
