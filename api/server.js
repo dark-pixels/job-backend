@@ -2,9 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
+import path from 'path'; // Import the path module
 import serverless from 'serverless-http';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// Convert import.meta.url to a file path and get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Explicitly configure dotenv to look for .env in the parent directory (the project root)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 app.use(cors());
