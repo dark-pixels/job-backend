@@ -5,11 +5,10 @@ import serverless from 'serverless-http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Resolve __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from root .env
+// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 // Import DB and routes
@@ -18,9 +17,9 @@ import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 
-// ✅ CORS setup for deployed frontend
+// ✅ CORS setup
 const corsOptions = {
-  origin: ['https://jobapp-cybermind.vercel.app'],
+  origin: 'https://jobapp-cybermind.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
   credentials: true,
@@ -28,7 +27,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // ✅ Handle preflight requests
+app.options('*', cors(corsOptions)); // Preflight support
 app.use(express.json());
 
 // ✅ Routes
@@ -63,8 +62,6 @@ const initializeServer = async () => {
 };
 
 const handler = async (req, res) => {
-  console.log(`🔄 Incoming request: ${req.method} ${req.url}`);
-
   try {
     if (!serverlessHandler) {
       await initializeServer();
@@ -72,6 +69,7 @@ const handler = async (req, res) => {
     return await serverlessHandler(req, res);
   } catch (err) {
     console.error('❌ Serverless function crashed:', err);
+    res.setHeader('Access-Control-Allow-Origin', corsOptions.origin);
     res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
