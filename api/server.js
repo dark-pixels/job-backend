@@ -34,29 +34,24 @@ app.get('/', (req, res) => {
 
 app.use('/api', jobRoutes);
 
-// A single variable to hold the serverless handler
+// A single variable to hold the initialized serverless handler
 let serverlessHandler;
 
-// This async function initializes the server and checks the database connection
+// This async function initializes the handler and checks the database connection
 const initializeServer = async () => {
-    // Check if the handler is already initialized to avoid re-running on every request
-    if (serverlessHandler) {
-        return serverlessHandler;
+    if (!serverlessHandler) {
+        try {
+            await db.execute('SELECT 1');
+            console.log('✅ Connected to database.');
+        } catch (err) {
+            console.error('❌ Database connection failed:', err);
+        }
+        serverlessHandler = serverless(app);
     }
-
-    try {
-        await db.execute('SELECT 1');
-        console.log('✅ Connected to database.');
-    } catch (err) {
-        console.error('❌ Database connection failed:', err);
-    }
-    
-    // Create the serverless handler after all routes are defined
-    serverlessHandler = serverless(app);
     return serverlessHandler;
 };
 
-// Export the serverless function
+// Export the main handler for Vercel
 export default async (req, res) => {
     const handler = await initializeServer();
     return handler(req, res);
