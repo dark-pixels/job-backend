@@ -20,27 +20,37 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Add a simple health check route
-app.get('/', (req, res) => {
-    res.json({ message: 'Job-backend server is running!' });
-});
+// A single variable to hold the serverless handler
+let serverlessHandler;
 
-// Use the job routes for API Endpoints
-app.use('/api', jobRoutes);
+// This async function initializes the server and checks the database connection
+const initializeServer = async () => {
+    // Check if the handler is already initialized to avoid re-running on every request
+    if (serverlessHandler) {
+        return serverlessHandler;
+    }
 
-// Database connection check and server export
-const server = (async () => {
     try {
         await db.execute('SELECT 1');
         console.log('✅ Connected to database.');
     } catch (err) {
         console.error('❌ Database connection failed:', err);
     }
-    return serverless(app);
-})();
+    
+    // Define all Express routes after the database connection is confirmed
+    app.get('/', (req, res) => {
+        res.json({ message: 'Job-backend server is running!' });
+    });
+    
+    app.use('/api', jobRoutes);
+    
+    // Create the serverless handler
+    serverlessHandler = serverless(app);
+    return serverlessHandler;
+};
 
-// ✅ Export as serverless function
+// Export the serverless function
 export default async (req, res) => {
-  const handler = await server;
-  return handler(req, res);
+    const handler = await initializeServer();
+    return handler(req, res);
 };
