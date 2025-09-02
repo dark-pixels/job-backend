@@ -1,53 +1,65 @@
 import db from '../models/db.js';
 
 export const createJob = async (req, res) => {
-    const {
-        title, company, location, type,
-        salary, experience, deadline, description, isDraft
-    } = req.body;
+  const {
+    title,
+    company,
+    location,
+    type,
+    salary,
+    experience,
+    deadline,
+    description,
+    isDraft,
+    logoPath,
+  } = req.body;
 
-    try {
-        const [result] = await db.execute(
-            `INSERT INTO jobs (title, company, location, type, salary, experience, deadline, description, isDraft)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, company, location, type, salary, experience, deadline, description, isDraft]
-        );
-        res.status(201).json({ id: result.insertId });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const [result] = await db.execute(
+      `INSERT INTO jobs (title, company, location, type, salary, experience, deadline, description, isDraft, logoPath)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, company, location, type, salary, experience, deadline, description, isDraft, logoPath]
+    );
+    res.status(201).json({ id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const getJobs = async (req, res) => {
-    const { title, location, type, salaryMin, salaryMax } = req.query;
-    let query = 'SELECT * FROM jobs WHERE isDraft = false';
-    const params = [];
+  const { search, location, type, minSalary, maxSalary } = req.query;
+  let query = 'SELECT * FROM jobs WHERE isDraft = false';
+  const params = [];
 
-    if (title) {
-        query += ' AND title LIKE ?';
-        params.push(`%${title}%`);
-    }
-    if (location) {
-        query += ' AND location LIKE ?';
-        params.push(`%${location}%`);
-    }
-    if (type) {
-        query += ' AND type = ?';
-        params.push(type);
-    }
-    if (salaryMin) {
-        query += ' AND salary >= ?';
-        params.push(salaryMin);
-    }
-    if (salaryMax) {
-        query += ' AND salary <= ?';
-        params.push(salaryMax);
-    }
+  if (search) {
+    query += ' AND LOWER(title) LIKE ?';
+    params.push(`%${search.toLowerCase()}%`);
+  }
 
-    try {
-        const [rows] = await db.execute(query, params);
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  if (location) {
+    query += ' AND LOWER(location) LIKE ?';
+    params.push(`%${location.toLowerCase()}%`);
+  }
+
+  if (type) {
+    query += ' AND type = ?';
+    params.push(type);
+  }
+
+  if (minSalary && !isNaN(minSalary)) {
+    query += ' AND salary >= ?';
+    params.push(Number(minSalary));
+  }
+
+  if (maxSalary && !isNaN(maxSalary)) {
+    query += ' AND salary <= ?';
+    params.push(Number(maxSalary));
+  }
+
+  try {
+    const [rows] = await db.execute(query, params);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
