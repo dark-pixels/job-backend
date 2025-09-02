@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import serverless from 'serverless-http';
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +15,7 @@ import jobRoutes from '../routes/jobRoutes.js';
 
 const app = express();
 
+// ✅ CORS setup
 const localOrigin = 'http://localhost:3000';
 const deployedOrigin = 'https://jobapp-cybermind.vercel.app';
 
@@ -36,14 +36,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// ✅ Root route
 app.get('/', (req, res) => {
   res.json({ message: 'Job-backend server is running!' });
 });
 
+// ✅ API routes
 app.use('/api', jobRoutes);
 
+// ✅ Serverless handler setup
 let serverlessHandler;
 
 const initializeServer = async () => {
@@ -68,6 +70,7 @@ const handler = async (req, res) => {
   return initializedHandler(req, res);
 };
 
+// ✅ Local vs Vercel deployment
 if (process.env.VERCEL_REGION) {
   // Vercel deployment
 } else {
